@@ -247,7 +247,9 @@ export const StackList = ({ renderItem, visibleItems, ...rest }: PropsT) => {
             currentlyDraggedItem !== undefined
               ? item.id === currentlyDraggedItem
                 ? style
-                : nonDraggableStyle
+                : animationState === 'drag'
+                ? nonDraggableStyle
+                : undefined
               : undefined
           }
         />

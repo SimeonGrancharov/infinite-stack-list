@@ -24,17 +24,30 @@ export default function App() {
           renderItem={(item) => (
             <View
               style={{
-                width: 200,
+                width: 150,
                 height: 120,
-                backgroundColor: Math.random() > 0.5 ? 'green' : 'blue',
+                paddingVertical: 20,
+                paddingHorizontal: 15,
                 borderRadius: 20,
                 borderWidth: 0.5,
-                borderColor: 'white',
+                borderColor: 'grey',
+                backgroundColor: 'white',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
             >
               <Text>{`Id is: ${item.id}`}</Text>
+              <View
+                style={{
+                  padding: 20,
+                }}
+              >
+                <Text>
+                  {
+                    'Hello I am very cool item. My main purpose in life is to show how the stack basically works'
+                  }
+                </Text>
+              </View>
             </View>
           )}
         />
