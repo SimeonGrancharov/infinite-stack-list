@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from 'react'
-import { LayoutChangeEvent, StyleProp, View, ViewStyle } from 'react-native'
+import { StyleProp, View, ViewStyle } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   useAnimatedStyle,
@@ -15,16 +15,17 @@ type ItemT = {
   id: string
 }
 
-type PropsT = {
-  items: ItemT[]
-  renderItem: (item: ItemT) => JSX.Element
+type PropsT<Item extends any> = {
+  items: Item[]
+  renderItem: (item: Item) => JSX.Element
+  keyExtractor?: (item: Item) => any
   reversed?: boolean
   visibleItems?: number
 }
 
 const Threshold = 1.02
 
-const Item = ({
+const Item = <Item extends Record<string, any>>({
   item,
   renderItem,
   offset,
@@ -35,8 +36,8 @@ const Item = ({
   onItemMeasured,
   animatedStyle,
 }: {
-  item: ItemT
-  renderItem: (item: ItemT) => JSX.Element
+  item: Item
+  renderItem: (item: Item) => JSX.Element
   offset: number
   animation: SharedValue<number>
   isLast: boolean
@@ -85,8 +86,12 @@ const Item = ({
   )
 }
 
-export const StackList = ({ renderItem, visibleItems, ...rest }: PropsT) => {
-  const [items, setItems] = useState<ItemT[]>(rest.items)
+export const StackList = <Item extends Record<string, any>>({
+  renderItem,
+  visibleItems,
+  ...rest
+}: PropsT<Item>) => {
+  const [items, setItems] = useState<Item[]>(rest.items)
   const [itemHeight, setItemHeight] = useState<number | undefined>(undefined)
 
   const [animationState, setAnimationState] = useState<
@@ -228,32 +233,36 @@ export const StackList = ({ renderItem, visibleItems, ...rest }: PropsT) => {
 
   return (
     <View>
-      {items.map((item, index) => (
-        <Item
-          key={item.id}
-          item={item}
-          renderItem={renderItem}
-          offset={
-            (visibleItems ?? 4) -
-            Math.min(visibleItems ?? 4, items.length - index)
-          }
-          isLast={index === items.length - 1}
-          animation={animation}
-          onDragStart={() => onItemDragBegin(item.id)}
-          onDragEnd={(translationY: number) => onDragEnd(item.id, translationY)}
-          onDrag={onItemDrag}
-          onItemMeasured={onItemLayout}
-          animatedStyle={
-            currentlyDraggedItem !== undefined
-              ? item.id === currentlyDraggedItem
-                ? style
-                : animationState === 'drag'
-                ? nonDraggableStyle
+      {items.map((item, index) => {
+        const id = rest.keyExtractor?.(item) ?? item.id ?? index
+
+        return (
+          <Item
+            key={id}
+            item={item}
+            renderItem={renderItem}
+            offset={
+              (visibleItems ?? 4) -
+              Math.min(visibleItems ?? 4, items.length - index)
+            }
+            isLast={index === items.length - 1}
+            animation={animation}
+            onDragStart={() => onItemDragBegin(id)}
+            onDragEnd={(translationY: number) => onDragEnd(id, translationY)}
+            onDrag={onItemDrag}
+            onItemMeasured={onItemLayout}
+            animatedStyle={
+              currentlyDraggedItem !== undefined
+                ? id === currentlyDraggedItem
+                  ? style
+                  : animationState === 'drag'
+                  ? nonDraggableStyle
+                  : undefined
                 : undefined
-              : undefined
-          }
-        />
-      ))}
+            }
+          />
+        )
+      })}
     </View>
   )
 }

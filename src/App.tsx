@@ -5,14 +5,16 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { StackList } from './components/StackList'
 
 export default function App() {
-  const data = useMemo(() => {
+  const data = useMemo<
+    ({ type: 'b'; peshka?: string } | { type: 'a'; monka?: number })[]
+  >(() => {
     return [
-      { id: '1' },
-      { id: '2' },
-      { id: '3' },
-      { id: '4' },
-      { id: '5' },
-      { id: '6' },
+      { type: 'a' },
+      { type: 'b' },
+      { type: 'a' },
+      { type: 'b' },
+      { type: 'b' },
+      { type: 'a' },
     ]
   }, [])
 
@@ -36,7 +38,7 @@ export default function App() {
                 alignItems: 'center',
               }}
             >
-              <Text>{`Id is: ${item.id}`}</Text>
+              <Text>{`Id is: ${item.type}`}</Text>
               <View
                 style={{
                   padding: 20,
