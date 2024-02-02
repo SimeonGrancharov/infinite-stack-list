@@ -3,55 +3,49 @@ import React, { useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { StackList } from './components/StackList'
+import { TabView } from './components/TabView'
 
 export default function App() {
   const data = useMemo<
-    ({ type: 'b'; peshka?: string } | { type: 'a'; monka?: number })[]
+    ({ id: string } & (
+      | { type: 'b'; peshka?: string }
+      | { type: 'a'; monka?: number }
+    ))[]
   >(() => {
     return [
-      { type: 'a' },
-      { type: 'b' },
-      { type: 'a' },
-      { type: 'b' },
-      { type: 'b' },
-      { type: 'a' },
+      { id: '1', type: 'a' },
+      { id: '2', type: 'b' },
+      { id: '3', type: 'a' },
+      { id: '4', type: 'b' },
+      { id: '5', type: 'b' },
+      { id: '6', type: 'a' },
     ]
   }, [])
 
+  const tabs = ['first', 'second']
+
   return (
     <View style={styles.container}>
-      <GestureHandlerRootView>
-        <StackList
-          items={data}
-          renderItem={(item) => (
-            <View
-              style={{
-                width: 150,
-                height: 120,
-                paddingVertical: 20,
-                paddingHorizontal: 15,
-                borderRadius: 20,
-                borderWidth: 0.5,
-                borderColor: 'grey',
-                backgroundColor: 'white',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Text>{`Id is: ${item.type}`}</Text>
+      <View
+        style={{
+          height: 75,
+          backgroundColor: 'red',
+        }}
+      />
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <TabView
+          tabs={tabs}
+          TabScene={(props) => {
+            return (
               <View
                 style={{
-                  padding: 20,
+                  flex: 1,
+                  marginTop: 100,
+                  backgroundColor: props.index % 2 === 0 ? 'red' : 'blue',
                 }}
-              >
-                <Text>
-                  {
-                    'Hello I am very cool item. My main purpose in life is to show how the stack basically works'
-                  }
-                </Text>
-              </View>
-            </View>
-          )}
+              ></View>
+            )
+          }}
         />
       </GestureHandlerRootView>
       <StatusBar style="auto" />
@@ -63,6 +57,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    justifyContent: 'center',
   },
 })
