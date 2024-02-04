@@ -22,7 +22,7 @@ export default function App() {
     ]
   }, [])
 
-  const tabs = ['first', 'second']
+  const tabs = ['first', 'second', 'third', 'fourth']
 
   return (
     <View style={styles.container}>
@@ -40,7 +40,6 @@ export default function App() {
               <View
                 style={{
                   flex: 1,
-                  marginTop: 100,
                   backgroundColor: props.index % 2 === 0 ? 'red' : 'blue',
                 }}
               ></View>
