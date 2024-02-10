@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Dimensions,
   StyleSheet,
@@ -12,7 +12,6 @@ import Animated, {
   Extrapolate,
   SharedValue,
   interpolate,
-  interpolateColor,
   runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
@@ -23,6 +22,7 @@ import Animated, {
 type PropsT<TabT> = {
   tabs: TabT[]
   TabScene: React.FC<{ tab: TabT; index: number; isActive: boolean }>
+  onTabChange?: (tab: TabT) => void
 }
 const width = Dimensions.get('screen').width
 
@@ -35,6 +35,10 @@ const _TabView = <TabT,>(props: PropsT<TabT>) => {
     setActiveTabIndex(index)
     translationX.value = withTiming(-1 * width * index, { duration: 200 })
   }, [])
+
+  useEffect(() => {
+    props.onTabChange?.(props.tabs[activeTabIndex])
+  }, [activeTabIndex])
 
   const pan = Gesture.Pan()
     .onChange((e) => {
@@ -99,7 +103,7 @@ const _TabView = <TabT,>(props: PropsT<TabT>) => {
         return
       }
 
-      // Extrat the transition by tabs. TODO Rethink if this is the better way at all
+      // Extract the transition by tabs. TODO Rethink if this is the better way at all
       transition.value = Math.abs(newValue / width)
     },
     [translationX.value]
@@ -162,35 +166,113 @@ type TabBarPropsT<TabT> = {
 }
 
 const TabBar = <TabT,>(props: TabBarPropsT<TabT>) => {
+  const [itemsLayout, setItemsLayout] = useState<number[]>([])
+
   return (
     <View
       style={{
         flexDirection: 'row',
         paddingVertical: 15,
-        paddingHorizontal: 10,
-        columnGap: 15,
       }}
     >
       {props.tabs.map((tab, index) => (
-        <AnimatedBackground
+        <TabBarItem
           key={index}
           index={index}
           animation={props.animation}
           onTabPress={props.onTabPress}
+          onWidthMeasured={(width) =>
+            setItemsLayout((items) => {
+              const newItems = [...items]
+              newItems[index] = width
+              return newItems
+            })
+          }
         >
           <Text>{typeof tab === 'object' ? (tab as any).id : tab}</Text>
-        </AnimatedBackground>
+        </TabBarItem>
       ))}
+      <TabBarIndicator
+        position={props.animation}
+        activeIndex={props.activeIndex}
+        itemWidths={itemsLayout}
+      />
     </View>
   )
 }
 
-const AnimatedBackground = (props: {
+const TabBarIndicator = (props: {
+  activeIndex: number
+  position: SharedValue<number>
+  itemWidths: number[]
+}) => {
+  const translations = useMemo(() => {
+    const result: number[] = []
+
+    for (let index = 0; index <= props.itemWidths.length - 1; index++) {
+      if (index === 0) {
+        result.push(0)
+        continue
+      }
+
+      result.push(result[index - 1] + props.itemWidths[index - 1])
+    }
+
+    return result
+  }, [props.itemWidths])
+
+  const style = useAnimatedStyle(() => {
+    if (!props.itemWidths.length) {
+      return {}
+    }
+
+    const width = interpolate(
+      props.position.value,
+      [...props.itemWidths.map((_, idx) => idx)],
+      [...props.itemWidths]
+    )
+
+    const translateX = interpolate(
+      props.position.value,
+      props.itemWidths.map((_, idx) => idx),
+      translations,
+      Extrapolate.CLAMP
+    )
+
+    return {
+      width,
+      transform: [
+        {
+          translateX,
+        },
+      ],
+    }
+  })
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          bottom: 0,
+          height: 15,
+          backgroundColor: 'green',
+          borderRadius: 5,
+        },
+        style,
+      ]}
+    />
+  )
+}
+
+const TabBarItem = (props: {
   animation: SharedValue<number>
   children: any
   index: number
+  onWidthMeasured: (width: number) => void
   onTabPress: (idx: number) => void
 }) => {
+  const measured = useRef(false)
   const fadeInAnimationStyle = useAnimatedStyle(() => {
     return {
       opacity: interpolate(
@@ -207,9 +289,16 @@ const AnimatedBackground = (props: {
 
   return (
     <Animated.View
+      onLayout={(e) => {
+        if (measured.current) {
+          return
+        }
+
+        measured.current = true
+        props.onWidthMeasured(e.nativeEvent.layout.width)
+      }}
       style={[
         {
-          flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
           paddingVertical: 10,

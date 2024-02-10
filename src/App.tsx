@@ -22,7 +22,7 @@ export default function App() {
     ]
   }, [])
 
-  const tabs = ['first', 'second', 'third', 'fourth']
+  const tabs = ['firstLONONON', 'second', 'thirdLONONON', 'fourth']
 
   return (
     <View style={styles.container}>
